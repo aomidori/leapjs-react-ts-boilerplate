@@ -7,18 +7,28 @@ import {
 import { vertex, fragment } from './shaders';
 
 export class ViewManager {
-  canvas: HTMLCanvasElement | null;
-  leapController = new LEAP.Controller();
+  canvas        : HTMLCanvasElement | null;
 
-  renderer!: Renderer;
-  scene!:    Transform;
-  program!: Program;
-  camera!: Camera;
+  /** LEAP */
+  leapController: LEAP.Controller = new LEAP.Controller();
+
+  /** OGL */
+  renderer!     : Renderer;
+  scene!        : Transform;
+  program!      : Program;
+  camera!       : Camera;
+
+  /** SCENE ATTRIBUTES */
+  CAMERA_INITIAL_ATTR = {
+    fov: 45,
+    aspect: window.innerWidth / window.innerHeight, 
+    near: 1,
+    far: 1000 // leap range: 25 - 600
+  };
 
   constructor(canvas: HTMLCanvasElement) {
     this.canvas = canvas;
     this.leapController.connect();
-    console.log(this.leapController);
   }
 
   init() {
@@ -33,7 +43,7 @@ export class ViewManager {
   }
 
   startRender() {
-    this.renderer = new Renderer({dpr: 2});
+    this.renderer = new Renderer({dpr: 2, canvas: this.canvas});
     this.scene = new Transform();
     if (!this.renderer) {
       return;
@@ -45,15 +55,10 @@ export class ViewManager {
       cullFace: null,
     });
     // gl.clearColor(1, 1, 1, 1);
-    this.camera = new Camera(gl, {fov: 35});
-    this.camera.position.set(0, 1, 7);
+    this.camera = new Camera(gl, this.CAMERA_INITIAL_ATTR);
+    this.camera.position.set(0, 40, 40);
     this.camera.lookAt([0, 0, 0]);
-    gl.clearColor(1, 1, 1, 1);
-
-    const cylinderGeometry = new Cylinder(gl);
-    const cylinder = new Mesh(gl, { geometry: cylinderGeometry, program: this.program });
-    cylinder.position.set(-1.3, 0, 0);
-    cylinder.setParent(this.scene);
+    (gl as any).clearColor(1, 1, 1, 1);
 
     window.addEventListener('resize', this.onResize, false);
     this.onResize();
@@ -62,7 +67,6 @@ export class ViewManager {
         return;
       }
       requestAnimationFrame(render);
-      console.log(this.scene.children);
       this.renderer.render({ scene: this.scene, camera: this.camera });
     }
     requestAnimationFrame(render);
@@ -78,22 +82,30 @@ export class ViewManager {
   }
 
   renderHand(hand: LEAP.Hand) {
-    if (!this.renderer) {
+    if (!this.renderer || !hand.valid) {
       return;
     }
     this.scene.children = [];
-    const gl: any = this.renderer.gl;
+    const gl = this.renderer.gl;
+
     hand.fingers.forEach((finger) => {
       // if finger.touchZone === 'hovering' {}
       if (finger.valid && finger.touchZone === 'hovering') {
         finger.bones.forEach((bone) => {
-          const geometry = new Cylinder(gl);
+          const geometry = new Cylinder(gl, {
+            radiusTop: 1,
+            radiusBottom: 1,
+            height: bone.length,
+          });
           const mesh = new Mesh(gl, { geometry, program: this.program });
-          mesh.position.set(bone.center());
+          const position = bone.center().map(v => v / 10.0);
+          mesh.position.set(...position);
+          mesh.rotation.fromRotationMatrix(bone.matrix());
           mesh.setParent(this.scene);
         });
       }
     });
+    console.log( this.scene.children.length);
   }
 
   dispose() {}

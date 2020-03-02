@@ -6,9 +6,17 @@
 declare module 'ogl' {
   export class Transform {
     constructor(): Transform;
+    parent: any;
     children: Mesh[];
+    visible: boolean;
+    matrix: any;
+    worldMatrix: any;
+    position: any;
+    rotation: any;
+    up: any;
+    quaternion: any;
   };
-  export class Mesh {
+  export class Mesh extends Transform {
     constructor(gl: WebGL2RenderingContext, attr: any): Mesh;
     position: any;
     setParent(parent: any): void;
@@ -45,7 +53,7 @@ declare module 'ogl' {
       autoClear: boolean;
       webgl: number;
     }> = {}): Renderer;
-    gl: WebGL2RenderingContext | any;
+    gl: WebGL2RenderingContext;
     setSize(width: number, height: number): void;
     setViewPort(width: number, height: number): void;
     enable(id: string): void;
@@ -65,6 +73,20 @@ declare module 'ogl' {
   }
 
   export class Cylinder extends Geometry {
+    constructor(
+      gl: WebGL2RenderingContext,
+      data?: Partial<{
+        radiusTop: number;
+        radiusBottom: number,
+        height: number,
+        radialSegments: number,
+        heightSegments: number,
+        openEnded: boolean,
+        thetaStart: number,
+        thetaLength: number,
+        attributes: { position?: any; normal?: any; uv?: any; index?: any; },
+      }>,
+    ): Cylinder;
     addHeight(): void;
   };
 }
