@@ -89,4 +89,58 @@ declare module 'ogl' {
     ): Cylinder;
     addHeight(): void;
   };
+
+  /**
+   * Math
+   */
+  class Array3 extends Array {
+    constructor(x: number, y: number, z: number): Array3;
+    x: number;
+    y: number;
+    z: number;
+    set(x: number, y: number, z: number): Array3;
+    copy(v: Array3): Array3;
+    add(va: number[], vb: number[]): Array3;
+    sub(va: number[], vb: number[]): Array3;
+    mutiply(v: number[]): Array3;
+    divide(v: number[]): Array3;
+    inverse(): Array3;
+    len(): number;
+    distance(v: number[]): number;
+    //.... TODO
+  };
+
+  class Vec3 extends OGLArray {
+    constructor(x: number, y: number, z: number): Euler;
+    x: number;
+    y: number;
+    z: number;
+    set(x: number, y: number, z: number): Vec3;
+    copy(v: Vec3): Vec3;
+    reorder(order: string): Vec3;
+    fromRotationMatrix(m: number[], order: string): Vec3;
+    fromQuaternion(q: number[], order: string): Vec3;
+  };
+
+  export class Euler extends Array3 {
+    constructor(x: number, y: number, z: number, order: string): Euler;
+  };
+  export class Mat4 extends Array {
+    constructor(
+      m00?: number, m01?: number, m02?: number, m03?: number,
+      m10?: number, m11?: number, m12?: number, m13?: number,
+      m20?: number, m21?: number, m22?: number, m23?: number,
+      m30?: number, m31?: number, m32?: number, m33?: number,
+    ): Mat4;
+    getRotation(): any;
+    getTranslation(pos: any): any;
+  };
+  export class Mat3 extends Array {
+    constructor(
+      m00?: number, m01?: number, m02?: number,
+      m10?: number, m11?: number, m12?: number,
+      m20?: number, m21?: number, m22?: number,
+    ): Mat3;
+    fromMatrix4(m: Mat4): Mat3;
+  };
 }

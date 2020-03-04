@@ -1,7 +1,7 @@
 import * as LEAP from 'leapjs';
 
 import {
-  Renderer, Camera, Transform, Program, Mesh, Cylinder,
+  Renderer, Camera, Transform, Program, Mesh, Cylinder, Mat3,
 } from 'ogl';
 
 import { vertex, fragment } from './shaders';
@@ -23,7 +23,9 @@ export class ViewManager {
     fov: 45,
     aspect: window.innerWidth / window.innerHeight, 
     near: 1,
-    far: 1000 // leap range: 25 - 600
+    far: 1000, // leap range: 25 - 600
+    lookAt: [0, 160, 0],
+    position: [0, 100, 500],
   };
 
   constructor(canvas: HTMLCanvasElement) {
@@ -55,9 +57,10 @@ export class ViewManager {
       cullFace: null,
     });
     // gl.clearColor(1, 1, 1, 1);
-    this.camera = new Camera(gl, this.CAMERA_INITIAL_ATTR);
-    this.camera.position.set(0, 40, 40);
-    this.camera.lookAt([0, 0, 0]);
+    const { fov, aspect, near, far, position, lookAt } = this.CAMERA_INITIAL_ATTR;
+    this.camera = new Camera(gl, { fov, aspect, near, far });
+    this.camera.position.set(...position);
+    this.camera.lookAt(lookAt);
     (gl as any).clearColor(1, 1, 1, 1);
 
     window.addEventListener('resize', this.onResize, false);
@@ -93,20 +96,24 @@ export class ViewManager {
       if (finger.valid && finger.touchZone === 'hovering') {
         finger.bones.forEach((bone) => {
           const geometry = new Cylinder(gl, {
-            radiusTop: 1,
-            radiusBottom: 1,
+            radiusTop: 2,
+            radiusBottom: 2,
             height: bone.length,
           });
           const mesh = new Mesh(gl, { geometry, program: this.program });
-          const position = bone.center().map(v => v / 10.0);
+          const position = bone.center();
           mesh.position.set(...position);
-          mesh.rotation.fromRotationMatrix(bone.matrix());
+          const matrix = new Mat3();
+          matrix.fromMatrix4(bone.matrix());
+          if (matrix) {
+            mesh.rotation.fromRotationMatrix(matrix);
+          }
           mesh.setParent(this.scene);
         });
       }
     });
-    console.log( this.scene.children.length);
+    console.log(this.scene.children.length);
   }
 
-  dispose() {}
+  decompose() {}
 }
